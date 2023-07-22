@@ -1,0 +1,124 @@
+SELECT MIN(salary), MAX(salary), SUM(salary), AVG(salary)
+FROM employees;
+
+SELECT MIN(salary), MAX(salary), SUM(salary), TRUNC(AVG(salary))
+FROM employees
+WHERE department_id IN (80,90);
+
+SELECT MIN(last_name), MAX(last_name)
+FROM employees;
+
+SELECT MIN(hire_date), MAX(hire_date)
+FROM employees;
+
+-- 테이블의 전체 데이터 행수 파악
+SELECT COUNT(*), COUNT(department_id), COUNT(last_name), COUNT(distinct department_id)
+FROM employees;
+
+SELECT AVG(commission_pct), AVG(NVL(commission_pct,0))
+FROM employees;
+
+-- STDDEV 편차
+SELECT MIN(salary), MAX(salary), TRUNC(STDDEV(salary))
+FROM employees
+WHERE department_id = 80;
+
+-- 그룹함수가 포함되는거엔 일반함수를 못 씀
+SELECT department_id, COUNT(*), SUM(salary)
+FROM employees;
+
+-- 테이블 행을 서브그룹으로 나눈 후 
+-- 그룹 함수를 사용하여 각 그룹에 대한 요약 정보를 반환
+SELECT department_id, job_id, COUNT(*), SUM(salary)
+FROM employees
+WHERE commission_pct IS NULL
+GROUP BY department_id, job_id
+ORDER BY 1,2;
+
+-- GROUP 과 WHERE을 같이 쓸 수 없어서 HAVING을 써야함.
+SELECT department_id, job_id, COUNT(*), SUM(salary)
+FROM employees
+GROUP BY department_id, job_id
+HAVING SUM(salary) > 10000
+ORDER BY 1,2;
+
+SELECT MAX(SUM(salary))
+FROM employees
+GROUP BY job_id;
+
+
+-- 행 수가 맞지않을 경우 null을 추가해서 맞춰줌.
+SELECT department_id, job_id, COUNT(*), SUM(salary)
+FROM employees
+GROUP BY department_id, job_id
+UNION
+SELECT department_id, TO_CHAR(null), COUNT(*), SUM(salary)
+FROM employees
+GROUP BY department_id
+UNION
+SELECT TO_NUMBER(null), TO_CHAR(null), COUNT(*), SUM(salary)
+FROM employees
+ORDER BY 1,2;
+
+SELECT department_id, job_id, COUNT(*), SUM(salary)
+FROM employees
+GROUP BY ROLLUP (department_id, job_id)
+ORDER BY 1,2;
+
+SELECT department_id, job_id, COUNT(*), SUM(salary)
+FROM employees
+GROUP BY CUBE (department_id, job_id, manager_id)
+ORDER BY 1,2;
+
+-- union말고 해결할 방법있으면 그걸로 쓰기
+-- rollup, cube 대신 쓰는거
+SELECT department_id, job_id, COUNT(*), SUM(salary)
+FROM employees
+GROUP BY GROUPING SETS((department_id,job_id),(manager_id),());
+
+SELECT department_id, job_id, manager_id, COUNT(*), SUM(salary)
+FROM employees
+GROUP BY GROUPING SETS((department_id,job_id),(manager_id),());
+
+-- 결과에 나오는 null이 사용된건지 안 된 건지를 0,1 로 식별해서 알려줌.
+SELECT department_id, GROUPING(department_id),
+       job_id, GROUPING(job_id),
+       manager_id,GROUPING(manager_id), 
+       COUNT(*), SUM(salary)
+FROM employees
+GROUP BY GROUPING SETS((department_id,job_id),(manager_id),());
+
+SELECT department_id, GROUPING(department_id) G1,
+       job_id, GROUPING(job_id) G2, 
+       COUNT(*), SUM(salary),
+       GROUPING_ID(department_id, job_id)G3
+FROM employees
+GROUP BY GROUPING SETS((department_id,job_id),());
+
+SELECT department_id, GROUPING(department_id) G1,
+       job_id, GROUPING(job_id) G2, 
+       COUNT(*), SUM(salary),
+       GROUPING_ID(department_id, job_id)G3
+FROM employees
+GROUP BY CUBE(department_id,job_id)
+ORDER BY 1,3;
+
+-- group by 로 보면 너무 많이 나와서 10진수 로 출력해주는 group id 로 한 번에 확인
+SELECT department_id, job_id, COUNT(*),
+--     GROUPING(department_id) g_d, GROUPING(job_id) g_j,
+       GROUPING_ID(department_id, job_id) g_id
+FROM employees
+GROUP BY ROLLUP(department_id, job_id)
+ORDER BY 1,2;
+
+-- 부서별 인원 수 + 부서의 사원이름 출력, 출력된 사원의 이름은 부서 내에서 급여가 높은 순서
+SELECT department_id, COUNT(*),
+       LISTAGG(last_name, ',') WITHIN GROUP (ORDER BY salary DESC)
+       AS ename
+FROM employees
+GROUP BY department_id;
+
+
+
+
+
