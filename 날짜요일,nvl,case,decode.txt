@@ -1,0 +1,228 @@
+-- LOWER, UPPER, INITCAP
+SELECT LOWER('SQL COURSE'),UPPER('SQL COURSE'),INITCAP('SQL COURSE')
+FROM dual;
+
+SELECT 'The job id for '||UPPER(last_name)||' is '||LOWER(job_id) AS "EMPLOYEE DETAILS"
+FROM employees;
+
+SELECT employee_id, last_name, department_id
+FROM employees
+WHERE LOWER(last_name) = 'higgins';
+
+SELECT employee_id, UPPER(last_name), department_id
+FROM employees
+WHERE INITCAP(last_name) = 'Higgins';
+
+-- 문자열 조작
+-- 값을 결합해서 출력 (최대 2개)
+SELECT CONCAT('Hello','World') FROM dual;
+-- 지정한 길이의 문자열을 추출
+SELECT SUBSTR('HelloWorld',1,5) FROM dual;
+-- 문자열 길이, 바이트수
+SELECT LENGTH('HelloWorld'), LENGTHB('HelloWorld') FROM dual;
+-- 지정한 문자의 위치를 숫자로 표시
+SELECT INSTR('HelloWorld','l') FROM dual;
+-- 오른쪽/왼쪽 정렬 후 빈곳을 지정한 문자열로 채워줌
+SELECT RPAD(last_name, 15,'*'), LPAD(salary, 10, '*') FROM employees;
+-- 지정한 접두어나 접미어 또는 모두 자름 (한 문자만 가능)
+SELECT TRIM('H' FROM 'HelloWorld') FROM dual;
+SELECT TRIM('w' FROM 'window'),
+       TRIM(LEADING 'w' FROM 'window'),
+       TRIM(TRAILING 'w' FROM 'window')
+FROM dual;
+
+SELECT TRIM('0' FROM '00123000') 
+FROM dual;
+
+-- RTRIM, LTRIM
+SELECT RTRIM('ababxxxababyyyabababab', 'ab'),
+LTRIM('ababxxxababyyyabababab', 'ab')
+FROM dual; 
+SELECT RTRIM(LTRIM('ababxxxababyyyabababab', 'ab'), 'ab')
+FROM dual; 
+
+
+SELECT employee_id, CONCAT(first_name, last_name) AS NAME, job_id, LENGTH(last_name),
+       INSTR(last_name, 'a') "Contains 'a'?"
+FROM employees
+WHERE SUBSTR(job_id, 4) = 'REP';
+
+SELECT employee_id, CONCAT(first_name, last_name) AS NAME, job_id, LENGTH(last_name),
+       INSTR(last_name, 'a') "Contains 'a'?"
+FROM employees
+WHERE SUBSTR(last_name, -1, 1) = 'n';
+
+SELECT employee_id, last_name, CONCAT(LOWER(email),'@oracle.com') AS "Email Address"
+FROM employees;
+
+
+-- 숫자 함수
+-- ROUND 반올림
+SELECT ROUND(45.923,-1), ROUND(45.923,0),ROUND(45.923,2)
+FROM dual;
+-- TRUNC 버림
+SELECT TRUNC(45.923,-1), TRUNC(45.923,0),TRUNC(45.923,2)
+FROM dual;
+-- MOD 나머지
+SELECT last_name, salary, MOD(salary, 5000)
+FROM employees
+WHERE job_id = 'SA_REP';
+-- CEIL/FLOOR 올림/내림
+SELECT CEIL(4.456), CEIL(-4.456), FLOOR(4.456), FLOOR(-4.456)
+FROM dual;
+
+
+-- 날짜 관련 시스템 함수
+
+SELECT sysdate FROM dual;
+SELECT current_date FROM dual;
+-- 서버시스템
+SELECT systimestamp FROM dual;
+-- 사용자 시스템
+SELECT current_timestamp FROM dual;
+
+SELECT last_name, TRUNC((SYSDATE-hire_date)/7) AS WEEKS
+FROM employees
+WHERE department_id = 90;
+
+SELECT employee_id, hire_date,
+       TRUNC(MONTHS_BETWEEN(SYSDATE, hire_date)) 근무시간,
+       ADD_MONTHS(hire_date,6) 직무능력검사일,
+       NEXT_DAY(hire_date,'월요일') 교육시작일,
+       LAST_DAY(hire_date)+10 첫급여일
+FROM employees
+ORDER BY 3;
+
+-- 요일 지정하기 (Saturday는 안됨.)
+SELECT next_day(sysdate,'토요일')
+FROM dual;
+SELECT next_day(sysdate,'토')
+FROM dual;
+SELECT next_day(sysdate,'Saturday')
+FROM dual;
+SELECT next_day(sysdate,7)
+FROM dual;
+
+SELECT EXTRACT(year FROM sysdate)
+FROM dual;
+
+SELECT last_name, hire_date, EXTRACT(month FROM hire_date) 입사월
+FROM employees;
+
+-- 월(15일 정오 기준, 15일 자정 기준), 일(정오 기준), 요일(수요일 정오 기준)
+SELECT ROUND(sysdate,'YEAR'),ROUND(sysdate,'MONTH'),ROUND(sysdate,'DD'),
+       ROUND(sysdate,'D')
+FROM dual;       
+SELECT TRUNC(sysdate,'YEAR'),TRUNC(sysdate,'MONTH'),
+       TRUNC(sysdate,'DD'),TRUNC(sysdate,'D')
+FROM dual;
+
+SELECT employee_id, MONTHS_BETWEEN(TRUNC(sysdate,'MM'), TRUNC(hire_date,'MM'))
+FROM employees;
+
+---- 데이터 유형 변환
+---- 명시적(explicit) 변환 (TO_NUMBER,TO_DATE,TO_CHAR)
+
+SELECT last_name, TO_CHAR(hire_date, 'DD MM YYYY') AS hiredate
+FROM employees;
+SELECT TO_CHAR(sysdate, 'YYYY MM DD HH24:MI:SS')
+FROM dual;
+
+SELECT employee_id, last_name,
+       TO_CHAR(salary, '$999,999') SALARY
+FROM employees;
+SELECT employee_id, last_name,
+       TO_CHAR(salary,'L999,999') SALARY
+FROM employees;
+SELECT employee_id, last_name,
+       TO_CHAR(salary,'$999,999.00') SALARY1,
+       TO_CHAR(salary,'$099,999.00') SALARY2
+FROM employees;
+
+-- 세션에서 지역 변경
+ALTER SESSION SET nls_territory='Japan';
+SELECT employee_id, last_name,
+       TO_CHAR(salary,'L99,999.00') SALARY
+FROM employees;
+ALTER SESSION SET nls_territory='Korea';
+
+SELECT employee_id, last_name, salary, job_id
+FROM employees
+WHERE salary > TO_NUMBER('$8,000','$9,999');
+SELECT employee_id, last_name, hire_date, department_id
+FROM employees
+WHERE hire_date >= TO_DATE('01-01-2014','dd-mm-yyyy');
+
+-- RR날짜 형식
+SELECT last_name, TO_CHAR(hire_date, 'yyyy/mm/dd')
+FROM employees
+WHERE hire_date > TO_DATE('31-12-99','DD-MM-RR');
+-- YY는 2099로 해석해서 안나옴.
+SELECT last_name, TO_CHAR(hire_date, 'yyyy/mm/dd')
+FROM employees
+WHERE hire_date > TO_DATE('31-12-99','DD-MM-YY');
+
+SELECT department_id, TO_NUMBER(null) AS location, hire_date
+FROM employees
+UNION
+SELECT department_id, location_id, TO_DATE(null)
+FROM departments;
+
+-- 일반 함수(nvl,nvl2,coalesce)
+SELECT last_name, salary, NVL(commission_pct,0),
+      (salary*12)+(salary*12*commission_pct) ANN_SAL
+FROM employees;
+SELECT last_name, salary, NVL(commission_pct,0),
+      (salary*12)+(salary*12*NVL(commission_pct,0)) ANN_SAL
+FROM employees;
+
+SELECT last_name, salary, commission_pct,
+      (salary*12)+(salary*12*NVL(commission_pct,0)) ANN_SAL,
+       NVL2(commission_pct,'COMM','NOCOMM') 비고
+FROM employees
+WHERE department_id IN (50,80);
+
+SELECT last_name,
+       COALESCE(commission_pct,salary,10) COMM
+FROM employees
+ORDER BY commission_pct;
+
+-- 함수 중첩
+SELECT last_name,
+       UPPER(CONCAT(SUBSTR(LAST_NAME,1,4),'_US'))
+FROM employees
+WHERE department_id = 60;
+SELECT last_name,
+       NVL(TO_CHAR(manager_id),'No Manager')
+FROM employees
+WHERE manager_id IS NULL;
+SELECT TO_CHAR(NEXT_DAY(ADD_MONTHS(hire_date,6),'금요일'),
+       'YYYY-MM-DD DAY') AS "Next 6 Month to Review"
+FROM employees
+ORDER BY hire_date;
+
+-- CASE 표현식
+SELECT last_name, job_id, salary,
+       CASE job_id WHEN 'IT_PROG' THEN 1.11*salary
+                   WHEN 'ST_CLERK' THEN 1.15*salary
+                   WHEN 'SA_REP' THEN 1.22*salary
+       ELSE salary END "REVISED_SALARY"
+FROM employees
+ORDER BY 2;
+SELECT last_name, job_id, salary,
+       CASE WHEN salary > 9000 THEN 'A'
+            WHEN salary BETWEEN 4000 AND 9000 THEN 'B'
+       ELSE 'C' END "급여등급"
+FROM employees;
+
+-- DECODE
+SELECT last_name, job_id, salary,
+       DECODE(job_id, 'IT_PROG', 1.1*salary,
+                      'ST_CLERK', 1.15*salary,
+                      'SA_REP', 1.22*salary,
+              salary) AS REVISED_SALARY
+FROM employees
+ORDER BY 2;
+
+
+
