@@ -1,0 +1,140 @@
+-- AVG, MAX, MIN, SUM
+SELECT AVG(salary), MAX(salary),
+       MIN(salary), SUM(salary)
+FROM employees
+WHERE job_id LIKE '%REP%';
+
+SELECT MIN(hire_date), MAX(hire_date)
+FROM employees;
+
+-- COUNT
+SELECT COUNT(*)
+FROM employees;
+
+SELECT COUNT(commission_pct)
+FROM employees
+WHERE department_id = 80;
+
+SELECT COUNT(DISTINCT department_id)
+FROM employees;
+
+SELECT AVG(commission_pct)
+FROM employees;
+
+SELECT AVG(NVL(commission_pct,0))
+FROM employees;
+
+-- GROUP BY
+SELECT AVG(salary)
+FROM employees
+GROUP BY department_id;
+
+SELECT department_id, AVG(salary)
+FROM employees
+GROUP BY department_id
+ORDER BY 2;
+
+SELECT department_id dept_id, job_id, SUM(salary)
+FROM employees
+GROUP BY department_id, job_id
+ORDER BY 1,2;
+
+-- 그룹함수가 아닌 것은 group by 절에 포함시켜야함.
+SELECT department_id, COUNT(last_name)
+FROM employees;
+
+-- having 절
+SELECT department_id, MAX(salary)
+FROM employees
+GROUP BY department_id
+HAVING MAX(salary)>10000
+ORDER BY 1,2;
+
+SELECT job_id, SUM(salary) PAYROLL
+FROM employees
+WHERE job_id NOT LIKE 'SA%'
+GROUP BY job_id
+HAVING SUM(salary) > 13000
+ORDER BY 2;
+-- 두 번 까지 중첩 가능
+SELECT MAX(AVG(salary))
+FROM employees
+GROUP BY department_id;
+
+-- ROLLUP (누적 집계)
+SELECT department_id, job_id, SUM(salary)
+FROM employees
+WHERE department_id < 60
+GROUP BY ROLLUP(department_id, job_id)
+ORDER BY 1,2;
+
+-- CUBE (교차 도표화(cross tabulation))
+SELECT department_id, job_id, SUM(salary)
+FROM employees
+WHERE department_id < 60
+GROUP BY CUBE(department_id, job_id)
+ORDER BY 1,2;
+
+-- GROUPING
+SELECT department_id DEPTID, job_id JOB, SUM(salary),
+       GROUPING(department_id) GRP_DEPT,
+       GROUPING(job_id) GRP_JOB
+FROM employees
+WHERE department_id < 50
+GROUP BY ROLLUP(department_id, job_id)
+ORDER BY 1,2;
+
+-- GROUPING_ID
+SELECT department_id DEPT_ID, job_id JOB, SUM(salary),
+       GROUPING(department_id) GRP_DEPT,
+       GROUPING(job_id) GRP_JOB,
+       GROUPING_ID(department_id, job_id) GRP
+FROM employees
+GROUP BY ROLLUP(department_id, job_id)
+ORDER BY 1,2;
+
+-- GROUPING SETS
+SELECT department_id, job_id, manager_id, AVG(salary)
+FROM employees
+GROUP BY GROUPING SETS((department_id, job_id), (job_id, manager_id));
+
+-- LISTAGG
+SELECT department_id, COUNT(*),
+       LISTAGG(last_name,',') WITHIN GROUP(ORDER BY salary DESC) AS NAME
+FROM employees
+GROUP BY department_id;
+
+-- PIVOT
+SELECT * FROM (SELECT department_id, job_id, salary
+               FROM employees
+               WHERE department_id IN (50,60,80));
+SELECT * FROM (SELECT job_id, department_id, salary 
+               FROM employees
+               WHERE department_id IN (50,60, 80))
+PIVOT (MAX(salary) FOR job_id 
+                   IN ('IT_PROG','SA_MAN','SA_REP','ST_CLERK', 'ST_MAN'))
+ORDER BY department_id;
+
+SELECT *
+FROM (SELECT job_id , TO_CHAR(hire_date, 'fmMM') || '월' AS hire_month
+      FROM employees)
+PIVOT (COUNT(*) FOR hire_month IN 
+    ('1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'));
+
+SELECT job_id
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '1', 1, 0)) "1월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '2', 1, 0)) "2월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '3', 1, 0)) "3월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '4', 1, 0)) "4월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '5', 1, 0)) "5월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '6', 1, 0)) "6월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '7', 1, 0)) "7월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '8', 1, 0)) "8월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '9', 1, 0)) "9월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '10', 1, 0)) "10월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '11', 1, 0)) "11월"
+, SUM(DECODE(TO_CHAR(hire_date, 'fmMM'), '12', 1, 0)) "12월"
+FROM employees
+GROUP BY job_id;
+
+
