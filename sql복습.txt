@@ -1,0 +1,301 @@
+select to_char(trunc(avg(salary),0), '99,999') as 사원급여평균
+from employees;
+
+select department_id as 부서코드,
+       to_char(round(avg(salary),0),'99,999,999') as avg_salary
+from employees
+group by department_id
+having avg(salary)>=5000
+order by 2;
+
+select department_id, avg(salary)
+from employees
+group by department_id
+order by department_id;
+
+select job_id, sum(salary)
+from employees
+group by job_id
+order by 1;
+
+select department_id, max(salary) as max_salary
+from employees
+where department_id in (10,20)
+group by department_id;
+
+select e.employee_id, e.department_id, d.department_name
+from employees e, departments d
+where e.department_id = d.department_id;
+
+select employee_id, department_id, department_name
+from employees join departments
+using(department_id);
+
+select * from locations;
+
+select d.department_id, l.city
+from departments d, locations l
+where d.location_id = l.location_id
+order by 1;
+
+select e.last_name, d.department_id, d.department_name
+from employees e, departments d
+where e.department_id = d.department_id(+);
+
+select last_name, department_id, department_name
+from employees 
+left join departments using(department_id);
+
+select e.last_name, d.department_id, d.department_name
+from employees e, departments d
+where e.department_id(+) = d.department_id;
+
+select last_name, department_id, department_name
+from employees
+right join departments using(department_id);
+
+select last_name, department_id, department_name
+from employees
+full join departments using(department_id);
+
+select e.last_name, d.department_id, d.manager_id
+from employees e, departments d
+where e.department_id = d.department_id 
+      and e.manager_id=d.manager_id;
+      
+select last_name, department_id, manager_id
+from employees
+inner join departments using(department_id, manager_id);
+
+create table location2 as select * from locations;
+select * from location2;
+alter table location2 rename column location_id to loc_id;
+
+select d.department_id, l.city 
+from departments d, location2 l
+where d.location_id = l.loc_id;
+
+select department_id, city 
+from departments
+join location2 on (location_id = loc_id);
+
+select department_id, city
+from departments d
+join location2 l on (d.location_id = l.loc_id);
+
+select e.employee_id as employeeID, e.last_name as employeeName,
+       m.last_name as Manager
+from employees e, employees m
+where e.employee_id = m.manager_id
+order by 1;
+
+-- e가 m의 직속 부하직원인 경우에만 결과를 반환
+-- e는 m의 관리하에 있는 직원
+select e.employee_id, e.last_name, m.last_name
+from employees e join employees m on (m.employee_id = e.manager_id)
+order by 1;
+
+-- e가 m의 상사인 경우에만 결과를 반환
+-- m은 e의 관리하에 있는 직원
+select e.employee_id, e.last_name, m.last_name
+from employees e join employees m on (e.employee_id = m.manager_id)
+order by 1;
+
+-----------------------------
+
+select * from countries, locations;
+select * from countries cross join locations;
+
+
+create table salgrade (salvel varchar2(2),
+                       lowst number, 
+                       highst number);
+                       
+insert into salgrade values('A', 20000,29999);
+insert into salgrade values('B', 10000,19999);
+insert into salgrade values('C', 0,9999);
+commit;
+
+select * from salgrade;
+
+select last_name, salary, salvel 
+from employees join salgrade
+on(salary between lowst and highst)
+order by salary desc;
+
+select last_name, job_title, department_name
+from employees join departments using(department_id)
+join jobs using(job_id);
+
+
+--Q3
+select last_name as Name, city as City, department_name as Dep_Name
+from departments join employees using(department_id)
+                 join locations using(location_id)
+where city in ('Seattle','Oxford')
+order by 2;
+
+select employee_id as EMP_ID, last_name as NAME, department_name as DEP_NAME, 
+       city as CITY, street_address as ADDRESS, country_name as COUNTRY
+from employees e join departments d on e.department_id = d.department_id
+                 join locations l on l.location_id = d.location_id
+                 join countries c on c.country_id = l.country_id
+order by 6, 4;
+
+select employee_id as EMP_ID, last_name as NAME, department_name as DEP_NAME, 
+       city as CITY, street_address as ADDRESS, country_name as COUNTRY
+from employees e join departments d on e.department_id = d.department_id
+                 join locations l on d.location_id = l.location_id
+                 join countries c on l.country_id = c.country_id
+order by 6, 4;
+
+
+-------------------------
+
+create table employees_role as select * from employees where 1=0;
+select * from employees_role;
+alter session set nls_date_format='RR/MM/DD';
+
+
+insert into employees_role values(101, 'Neena', 'Kochhar', 'NKOCHHAR', '515.123.4568', '1989-09-21','AD_VP', 17000.00, NULL, 100, 90);
+insert into employees_role values(101, 'Neena', 'Kochhar', 'NKOCHHAR', '515.123.4568', '1989-09-21',
+'AD_VP', 17000.00, NULL, 100, 90);
+insert into employees_role VALUES
+(300, 'GeaHee', 'Conan', 'CONAN', '010-123-4567', '2009-03-01', 'IT_PROG',
+23000.00, NULL, 100, 90);
+
+
+select employee_id, last_name from employees
+union
+select employee_id, last_name from employees_role;
+
+select employee_id, last_name from employees
+union all 
+select employee_id, last_name from employees_role
+order by employee_id;
+
+select employee_id, last_name from employees
+minus
+select employee_id, last_name from employees_role;
+
+select employee_id, last_name from employees
+intersect 
+select employee_id, last_name from employees_role;
+
+select last_name, job_id from employees
+intersect
+select last_name, job_id from employees_role
+where department_id = 90;
+
+
+select last_name, job_title
+from employees join jobs using(job_id)
+where job_title in('Stock Manager','Programmer');
+
+select last_name, job_title from employees join jobs using(job_id)
+where job_title = 'Stock Manager'
+union
+select last_name, job_title from employees join jobs using(job_id)
+where job_title = 'Programmer'
+order by 2;
+
+select last_name, employee_id, hire_date from employees
+where department_id = 20
+union
+select department_name, department_id, null from departments
+where department_id =20;
+
+select department_id from employees where first_name='Neena';
+
+select department_name from departments where department_id = 90;
+
+select department_name from departments
+where department_id = (select department_id 
+                        from employees where first_name = 'Neena');
+
+
+select last_name, department_id, salary
+from employees
+where department_id = (select department_id from employees
+                       where first_name='Neena')
+and salary > (select salary from employees where first_name='Neena');
+
+select last_name, salary
+from employees
+where salary = (select min(salary) from employees);
+
+select department_name, sum(salary)
+from employees
+join departments using(department_id)
+group by department_name
+having sum(salary) = (select max(sum(salary)) from employees
+                     group by department_id);
+
+select last_name, department_name, salary
+from employees join departments using(department_id)
+where department_id = (select department_id from employees
+                       where last_name = 'Austin')
+and salary = (select salary from employees
+              where last_name = 'Austin');
+
+
+select last_name, job_id, salary
+from employees
+where job_id = 'ST_MAN'
+and salary > any(select salary from employees where job_id = 'IT_PROG');
+                 
+select last_name, job_id, to_char(salary, 'L99,999')
+from employees 
+where job_id = 'FI_ACCOUNT' or job_id = 'SA_REP'
+and salary > (select max(salary) from employees
+              where job_id = 'IT_PROG')
+order by salary desc;
+
+select last_name, job_id, salary
+from employees
+where salary in (select salary from employees
+                 where job_id = 'IT_PROG');
+
+select employee_id, last_name, 
+case when employee_id in (select manager_id from employees) 
+     then 'Manager'
+     else 'Clerk'
+     end as sort
+from employees
+order by 3 desc, 1;
+
+select employee_id, last_name, 'Manager' as sort from employees
+where employee_id in (select manager_id from employees)
+union
+select employee_id, last_name, 'Clerk' as sort from employees
+where employee_id not in (select manager_id from employees 
+                          where manager_id is not null)
+order by 3 desc, 1;
+
+select employee_id, last_name, 'Manager' as sort from employees e
+where exists (select null from employees where e.employee_id = manager_id)
+union
+select employee_id, last_name, 'Clerk' as sort from employees e
+where not exists (select null from employees where e.employee_id = manager_id)
+order by 3 desc, 1;
+
+select last_name as Name, job_title as Job, concat('$',to_char(salary, '99,999')) as Salary
+from employees join jobs using (job_id)
+where salary in (select trunc(avg(salary),-2) from employees
+                 group by job_id)
+order by 3;
+
+select department_name, job_title, round(avg(salary), 2) as Avg_sal
+from employees join departments using(department_id)
+               join jobs using (job_id)
+               group by rollup(department_name, job_title);
+
+select department_name, job_title, round(avg(salary),2) as Avg_sal
+from employees join departments using (department_id)
+               join jobs        using(job_id)
+               group by cube(department_name, job_title);
+
+select job_title, round(avg(salary),2) as Avg_sal
+from employees join departments using (department_id)
+               join jobs        using (job_id)
+               group by grouping sets((job_title),());
